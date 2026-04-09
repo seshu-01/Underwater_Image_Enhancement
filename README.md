@@ -116,16 +116,17 @@ Our empirical testing on a custom dataset subset (n=108 images) yields comprehen
 
 | Metric | CLAHE | FUnIE-GAN | Observation |
 |---|---|---|---|
-| **PSNR** | 16.45 ± 2.89 | 18.56 ± 3.49 | GAN slightly better; CLAHE limited by simple histogram equalization |
-| **SSIM** | 0.5234 ± 0.11 | 0.5910 ± 0.12 | GAN better at structural preservation |
-| **UIQM** | 2.12 ± 0.45 | 2.64 ± 0.53 | GAN superior at perceptual quality and color vibrancy |
+| **PSNR** | 20.07 ± 3.07 | 18.56 ± 3.49 | CLAHE significantly better; improved preprocessing achieves superior fidelity |
+| **SSIM** | 0.8140 ± 0.0834 | 0.5910 ± 0.1212 | CLAHE excellent at structural preservation; major improvement over baseline |
+| **UIQM** | 2.61 ± 0.55 | 2.64 ± 0.53 | Performance nearly equivalent; GAN maintains slight edge in perceptual quality |
 
 ### FUnIE-GAN Deep Analysis
 
 | Metric | Score | Finding |
 |---|---|---|
 | **PSNR** | 18.56 ± 3.49 | **Domain Shift Issue:** Model applies EUVP training-set colors, failing to match custom ground truth |
-| **SSIM** | 0.5910 ± 0.12 | **Architecture Bottleneck:** 256×256 resolution causes structural detail loss during upscaling |
+| **SSIM** | 0.5910 ± 0.1212 | **Architecture Bottleneck:** 256×256 resolution causes structural detail loss during upscaling |
+| **UIQM** | 2.64 ± 0.53 | **Perceptual Quality Strength:** High UIQM compensates for low SSIM; excels at color vibrancy and haze removal |
 ### Method Performance Summary
 
 - **CLAHE:** 
@@ -136,9 +137,9 @@ Our empirical testing on a custom dataset subset (n=108 images) yields comprehen
   - **Best for:** Quick baseline enhancement, lightweight deployments
 
 - **FUnIE-GAN:** 
-  - [PRO] Superior UIQM score (2.64 vs 2.12) - excellent perceptual quality
+  - [PRO] Excellent UIQM score (2.64 vs 2.61) - comparable perceptual quality
   - [PRO] Effective haze removal and color vibrancy
-  - [PRO] Better SSIM (0.591 vs 0.523) - structural preservation
+  - [CON] Weaker SSIM (0.5910 vs 0.8140) - CLAHE superior at structural preservation
   - [CAUTION] Domain shift limitations - struggles with out-of-training data
   - [CAUTION] 256×256 bottleneck causes resolution loss
   - **Best for:** Visually pleasing results, real-time enhancement
