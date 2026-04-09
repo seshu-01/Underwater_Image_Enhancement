@@ -174,14 +174,6 @@ Our final findings across the evaluated models:
 
 ---
 
-## Contributors
-
-- Member 1: CLAHE + Dataset
-- Member 2: GAN Implementation
-- Member 3: Metrics + Analysis
-
----
-
 ## Future Work
 
 - Real-time deployment
