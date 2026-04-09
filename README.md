@@ -40,11 +40,10 @@ State-of-the-art generative models that iteratively refine images.
 underwater-image-enhancement-comparison/
 │
 ├── data/
-│   ├── raw_subset/              -> Raw underwater images (input)
+│   ├── raw_subset/               -> Raw underwater images (input)
 │   ├── reference_subset/         -> Ground truth reference images
 │   ├── clahe_output/             -> CLAHE enhanced images
 │   ├── Gan_output/               -> GAN (FUnIE) enhanced images
-│   └── diffusion_output/         -> Diffusion model enhanced images (placeholder)
 │
 ├── src/
 │   ├── clahe.py                 -> CLAHE enhancement script
@@ -54,6 +53,9 @@ underwater-image-enhancement-comparison/
 │   └── utils.py                 -> Utility functions
 │
 ├── Results/
+|   ├──figures/
+|        ├── fig2_bar_chart.png  -> Quantitative Comparison of UIE Methods on UIEB Dataset
+|        ├── fig3_scatter.png    -> Enhancement Quality.ys. Inference Speed
 │   ├── images_CLAHE/            -> CLAHE comparison images (RAW | CLAHE | GT)
 │   ├── images_FUnIE_GAN/        -> GAN comparison images (RAW | GAN | GT)
 │   └── images_Diffusion/        -> Diffusion comparison images (placeholder)
