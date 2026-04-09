@@ -1,9 +1,15 @@
+""" 
+This script applies CLAHE (Contrast Limited Adaptive Histogram Equalization) to enhance underwater images. 
+It reads images from the specified input folder, processes them using CLAHE, and saves the enhanced images to the output folder. 
+The script also prints progress updates for each processed image.
+"""
+
 import cv2
 import os
 
 # Input & Output folders
-input_folder = "../data/raw"
-output_folder = "../data/clahe"
+input_folder = "data/raw_subset"
+output_folder = "data/clahe_output"
 #input_folder = r"D:\VIT\WINSEM25-26\F- DIGITAL IMAGE PROCESSING\PJT\underwater-image-enhancement-comparison\data\raw"
 #output_folder = r"D:\VIT\WINSEM25-26\F- DIGITAL IMAGE PROCESSING\PJT\underwater-image-enhancement-comparison\data\clahe"
 

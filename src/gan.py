@@ -166,9 +166,9 @@ def run_inference(model, input_dir, output_dir, device):
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="FUnIE-GAN Underwater Image Enhancement")
-    parser.add_argument("--input",   type=str, default="data/raw-890",
+    parser.add_argument("--input",   type=str, default="data/raw_subset",
                         help="Path to input directory containing raw underwater images")
-    parser.add_argument("--output",  type=str, default="data/gan",
+    parser.add_argument("--output",  type=str, default="data/Gan_output",
                         help="Path to output directory for enhanced images")
     parser.add_argument("--weights", type=str, default="models/funie_gan/funie_generator.pth",
                         help="Path to pretrained generator weights (.pth)")

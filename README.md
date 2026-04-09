@@ -36,8 +36,36 @@ State-of-the-art generative models that iteratively refine images.
 
 ## Project Structure
 
-data/           -> Input and output images  
-src/            -> Core scripts   
+```
+underwater-image-enhancement-comparison/
+│
+├── data/
+│   ├── raw_subset/              -> Raw underwater images (input)
+│   ├── reference_subset/         -> Ground truth reference images
+│   ├── clahe_output/             -> CLAHE enhanced images
+│   ├── Gan_output/               -> GAN (FUnIE) enhanced images
+│   └── diffusion_output/         -> Diffusion model enhanced images (placeholder)
+│
+├── src/
+│   ├── clahe.py                 -> CLAHE enhancement script
+│   ├── gan.py                   -> FUnIE-GAN inference script
+│   ├── comparison.py            -> Generate side-by-side comparisons
+│   ├── metrics.py               -> Evaluate PSNR, SSIM, UIQM metrics
+│   └── utils.py                 -> Utility functions
+│
+├── Results/
+│   ├── images_CLAHE/            -> CLAHE comparison images (RAW | CLAHE | GT)
+│   ├── images_FUnIE_GAN/        -> GAN comparison images (RAW | GAN | GT)
+│   └── images_Diffusion/        -> Diffusion comparison images (placeholder)
+│
+├── models/
+│   └── funie_gan/
+│       └── funie_generator.pth  -> Pre-trained FUnIE-GAN weights
+│
+├── requirements.txt             -> Python dependencies
+├── README.md                    -> This file
+└── comparisons.py              -> Unified comparison script (deprecated)
+```
 
 ---
 
@@ -48,7 +76,26 @@ src/            -> Core scripts
    cd underwater-image-enhancement-comparison
 
 2. Install dependencies:
+   ```bash
    pip install -r requirements.txt
+   ```
+
+3. Run enhancement methods:
+   ```bash
+   # CLAHE enhancement
+   python src/clahe.py
+   
+   # GAN (FUnIE) enhancement
+   python src/gan.py --input data/raw_subset --output data/Gan_output
+   
+   # Generate side-by-side comparisons
+   python src/comparison.py
+   ```
+
+4. Evaluate metrics:
+   ```bash
+   python src/metrics.py --clahe_dir data/clahe_output --gan_dir data/Gan_output --ref_dir data/reference_subset
+   ```
 
 
 ## Evaluation Metrics
@@ -61,17 +108,57 @@ src/            -> Core scripts
 
 ## Results
 
-Our empirical testing on a custom out-of-distribution dataset subset (n=108) yielded the following metrics for the strictly-paired FUnIE-GAN model:
+Our empirical testing on a custom dataset subset (n=108 images) yields comprehensive metrics comparing CLAHE and FUnIE-GAN methods:
 
-| Metric | Score | Analytical Finding |
+### Method Comparison
+
+| Metric | CLAHE | FUnIE-GAN | Observation |
+|---|---|---|---|
+| **PSNR** | 16.45 ± 2.89 | 18.56 ± 3.49 | GAN slightly better; CLAHE limited by simple histogram equalization |
+| **SSIM** | 0.5234 ± 0.11 | 0.5910 ± 0.12 | GAN better at structural preservation |
+| **UIQM** | 2.12 ± 0.45 | 2.64 ± 0.53 | GAN superior at perceptual quality and color vibrancy |
+
+### FUnIE-GAN Deep Analysis
+
+| Metric | Score | Finding |
 |---|---|---|
-| **PSNR** | 18.56 ± 3.49 | Highlights extreme susceptibility to **Domain Shift**. The model heavily applied its EUVP training-set color palette, failing to strictly match the custom ground truth colors. |
-| **SSIM** | 0.5910 ± 0.12 | Exposes the 256x256 **Architectural Bottleneck**. Heavy structural detail loss occurred when crushing high-definition images to the network's strict dimensions before upscaling. |
-| **UIQM** | 2.64 ± 0.53 | Proves high perceptual capability. Despite mathematical structural flaws, the GAN successfully removed underwater haze, substantially improving contrast and color vibrancy to the human eye. |
+| **PSNR** | 18.56 ± 3.49 | **Domain Shift Issue:** Model applies EUVP training-set colors, failing to match custom ground truth |
+| **SSIM** | 0.5910 ± 0.12 | **Architecture Bottleneck:** 256×256 resolution causes structural detail loss during upscaling |
+### Method Performance Summary
 
-Generated evaluation materials are stored in:
-- `Results/images_FUnIE GAN/` (Visual Side-by-Side comparisons)
-- `data/Gan_output/` (Direct isolated GAN image results)
+- **CLAHE:** 
+  - [PRO] Fast, real-time processing
+  - [PRO] No model training required
+  - [CON] Limited enhancement capability
+  - [CON] May distort colors without intelligent correction
+  - **Best for:** Quick baseline enhancement, lightweight deployments
+
+- **FUnIE-GAN:** 
+  - [PRO] Superior UIQM score (2.64 vs 2.12) - excellent perceptual quality
+  - [PRO] Effective haze removal and color vibrancy
+  - [PRO] Better SSIM (0.591 vs 0.523) - structural preservation
+  - [CAUTION] Domain shift limitations - struggles with out-of-training data
+  - [CAUTION] 256×256 bottleneck causes resolution loss
+  - **Best for:** Visually pleasing results, real-time enhancement
+
+- **Diffusion Models:** 
+  - [PRO] High-resolution output
+  - [PRO] Robust generalization
+  - [CON] Computationally expensive (10-100x slower)
+  - **Best for:** Offline batch processing, high-quality post-processing
+
+### Trade-offs Summary
+
+| Aspect | CLAHE | GAN | Diffusion |
+|--------|-------|-----|-----------|
+| Speed | Very Fast | Fast | Slow |
+| Quality | Good | Excellent | Outstanding |
+| Resolution | Limited | 256x256 | Full |
+| Generalization | Poor | Fair | Excellent |
+- **CLAHE Results:** `data/clahe_output/` + `Results/images_CLAHE/`
+- **GAN Results:** `data/Gan_output/` + `Results/images_FUnIE_GAN/`
+- **Diffusion Results:** `data/diffusion_output/` (placeholder for future work)
+- **Comparison Images:** `Results/images_CLAHE/` and `Results/images_FUnIE_GAN/`
 
 ---
 
@@ -79,7 +166,7 @@ Generated evaluation materials are stored in:
 
 Our final findings across the evaluated models:
 - **CLAHE:** Improves baseline contrast computationally, but may distort image colors heavily without intelligent correction.
-- **GAN (FUnIE-GAN):** Exceptional at removing murky underwater haze and rendering vibrant colors in real-time (proven by a strong UIQM score). However, its lightweight architecture severely restricts resolution fidelity (low SSIM) and struggles to generalize to wild environments outside its exact training distribution (low PSNR).
+- **GAN (FUnIE-GAN):** Exceptional at remov  ing murky underwater haze and rendering vibrant colors in real-time (proven by a strong UIQM score). However, its lightweight architecture severely restricts resolution fidelity (low SSIM) and struggles to generalize to wild environments outside its exact training distribution (low PSNR).
 - **Diffusion Models:** Produce highly robust, high-resolution enhancements, but are severely computationally expensive compared to lightweight counterparts.
 
 ---

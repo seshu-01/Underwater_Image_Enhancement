@@ -119,51 +119,82 @@ def getSSIM(r_img, g_img):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--gan_dir", type=str, default="data/Gan_output")
+    parser.add_argument("--clahe_dir", type=str, default="data/clahe_output")
     parser.add_argument("--ref_dir", type=str, default="data/reference_subset")
     args = parser.parse_args()
     
-    # Resolve relative paths against the caller directory
-    base_dir = r"c:\1Projects\FUnIE GAN\FUnIE GAN inference\underwater-image-enhancement-comparison-FUnIE-GAN"
-    gan_dir = os.path.join(base_dir, args.gan_dir)
-    ref_dir = os.path.join(base_dir, args.ref_dir)
-    
-    files = [f for f in os.listdir(gan_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-    
-    print(f"Evaluating PSNR, SSIM, and EIQM(UIQM) on {len(files)} files...")
-    
-    psnrs, ssims, uiqms = [], [], []
-    for idx, filename in enumerate(files, 1):
-        gan_path = os.path.join(gan_dir, filename)
-        ref_path = os.path.join(ref_dir, filename)
-        
-        if not os.path.exists(ref_path):
-            print(f"[!] Warning: Ground truth not found for {filename}")
-            continue
-            
-        g_im = Image.open(gan_path).convert('RGB')
-        r_im = Image.open(ref_path).convert('RGB')
-        
-        if g_im.size != r_im.size:
-            g_im = g_im.resize(r_im.size, Image.BICUBIC)
-            
-        g_arr = np.array(g_im)
-        r_arr = np.array(r_im)
-        
-        # Calculate
-        p = getPSNR(r_arr, g_arr)
-        s = getSSIM(r_arr, g_arr)
-        u = getUIQM(g_arr)
-        
-        psnrs.append(p)
-        ssims.append(s)
-        uiqms.append(u)
-        
-        if idx % 10 == 0 or idx == len(files):
-            print(f"  [{idx}/{len(files)}] PSNR: {p:.2f} |  SSIM: {s:.4f} | UIQM: {u:.2f}")
+    # Project root (same pattern as before)
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    print("\n" + "="*50)
-    print("FINAL EVALUATION METRICS (Averages):")
-    print(f"  PSNR : {np.mean(psnrs):.2f} ± {np.std(psnrs):.2f}")
-    print(f"  SSIM : {np.mean(ssims):.4f} ± {np.std(ssims):.4f}")
-    print(f"  UIQM : {np.mean(uiqms):.2f} ± {np.std(uiqms):.2f}")
-    print("="*50)
+    gan_dir = os.path.join(BASE_DIR, args.gan_dir)
+    clahe_dir = os.path.join(BASE_DIR, args.clahe_dir)
+    ref_dir = os.path.join(BASE_DIR, args.ref_dir)
+
+    files = [f for f in os.listdir(ref_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+
+    print(f"Evaluating GAN + CLAHE on {len(files)} images...\n")
+
+    # ===== METRIC STORAGE =====
+    gan_psnr, gan_ssim, gan_uiqm = [], [], []
+    clahe_psnr, clahe_ssim, clahe_uiqm = [], [], []
+
+    for idx, filename in enumerate(files, 1):
+        ref_path = os.path.join(ref_dir, filename)
+        gan_path = os.path.join(gan_dir, filename)
+        clahe_path = os.path.join(clahe_dir, filename)
+
+        if not os.path.exists(ref_path):
+            continue
+
+        r_im = Image.open(ref_path).convert('RGB')
+        r_arr = np.array(r_im)
+
+        # ===== GAN =====
+        if os.path.exists(gan_path):
+            g_im = Image.open(gan_path).convert('RGB')
+            if g_im.size != r_im.size:
+                g_im = g_im.resize(r_im.size, Image.BICUBIC)
+
+            g_arr = np.array(g_im)
+
+            gan_psnr.append(getPSNR(r_arr, g_arr))
+            gan_ssim.append(getSSIM(r_arr, g_arr))
+            gan_uiqm.append(getUIQM(g_arr))
+
+        # ===== CLAHE =====
+        if os.path.exists(clahe_path):
+            c_im = Image.open(clahe_path).convert('RGB')
+            if c_im.size != r_im.size:
+                c_im = c_im.resize(r_im.size, Image.BICUBIC)
+
+            c_arr = np.array(c_im)
+
+            clahe_psnr.append(getPSNR(r_arr, c_arr))
+            clahe_ssim.append(getSSIM(r_arr, c_arr))
+            clahe_uiqm.append(getUIQM(c_arr))
+
+        if idx % 10 == 0 or idx == len(files):
+            print(f"\n[{idx}/{len(files)}]")
+
+            if len(gan_psnr) > 0:
+                print(f"  GAN   -> PSNR: {gan_psnr[-1]:.2f} | SSIM: {gan_ssim[-1]:.4f} | UIQM: {gan_uiqm[-1]:.2f}")
+
+            if len(clahe_psnr) > 0:
+                print(f"  CLAHE -> PSNR: {clahe_psnr[-1]:.2f} | SSIM: {clahe_ssim[-1]:.4f} | UIQM: {clahe_uiqm[-1]:.2f}")
+
+
+    # ===== FINAL RESULTS =====
+    print("\n" + "="*60)
+    print("FINAL METRICS (Mean ± Std)\n")
+
+    print("GAN RESULTS:")
+    print(f"  PSNR : {np.mean(gan_psnr):.2f} ± {np.std(gan_psnr):.2f}")
+    print(f"  SSIM : {np.mean(gan_ssim):.4f} ± {np.std(gan_ssim):.4f}")
+    print(f"  UIQM : {np.mean(gan_uiqm):.2f} ± {np.std(gan_uiqm):.2f}\n")
+
+    print("CLAHE RESULTS:")
+    print(f"  PSNR : {np.mean(clahe_psnr):.2f} ± {np.std(clahe_psnr):.2f}")
+    print(f"  SSIM : {np.mean(clahe_ssim):.4f} ± {np.std(clahe_ssim):.4f}")
+    print(f"  UIQM : {np.mean(clahe_uiqm):.2f} ± {np.std(clahe_uiqm):.2f}")
+
+    print("="*60)
