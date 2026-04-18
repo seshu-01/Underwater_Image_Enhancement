@@ -10,8 +10,6 @@ import os
 # Input & Output folders
 input_folder = "data/raw_subset"
 output_folder = "data/clahe_output"
-#input_folder = r"D:\VIT\WINSEM25-26\F- DIGITAL IMAGE PROCESSING\PJT\underwater-image-enhancement-comparison\data\raw"
-#output_folder = r"D:\VIT\WINSEM25-26\F- DIGITAL IMAGE PROCESSING\PJT\underwater-image-enhancement-comparison\data\clahe"
 
 os.makedirs(output_folder, exist_ok=True)
 
